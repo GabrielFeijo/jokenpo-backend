@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRoomDto, JoinRoomDto } from './dto/create-room.dto';
-import { Room, RoomStatus, GameMode } from '@prisma/client';
+import { Room, RoomStatus, GameMode, MatchStatus } from '@prisma/client';
 import { nanoid } from 'nanoid';
 
 @Injectable()
@@ -71,7 +71,15 @@ export class RoomsService {
 			include: {
 				creator: true,
 				players: true,
-				matches: true,
+				matches: {
+					include: {
+						plays: true,
+						results: true,
+					},
+					orderBy: {
+						createdAt: 'desc',
+					},
+				},
 			},
 		});
 
@@ -79,12 +87,15 @@ export class RoomsService {
 			throw new NotFoundException('Room not found');
 		}
 
-		if (room.players.length >= 2) {
+		if (
+			room.players.length >= 2 &&
+			!room.players.find((p) => p.id === userId)
+		) {
 			throw new ConflictException('Room is full. Maximum 2 players allowed.');
 		}
 
 		if (room.playerIds.includes(userId)) {
-			throw new ConflictException('User already in this room');
+			return room;
 		}
 
 		if (room.status === RoomStatus.PLAYING) {
@@ -143,16 +154,24 @@ export class RoomsService {
 		return room;
 	}
 
-	async findByInviteCode(inviteCode: string): Promise<Room> {
+	async findByInviteCode(inviteCode: string) {
 		const room = await this.prisma.room.findUnique({
 			where: { inviteCode: inviteCode.toUpperCase() },
 			include: {
 				creator: true,
 				players: true,
 				matches: {
+					where: {
+						status: {
+							not: MatchStatus.FINISHED,
+						},
+					},
 					include: {
 						plays: true,
 						results: true,
+					},
+					orderBy: {
+						createdAt: 'desc',
 					},
 				},
 			},
@@ -164,7 +183,7 @@ export class RoomsService {
 			);
 		}
 
-		return room;
+		return { ...room, cuurentMatch: room.matches[room.matches.length - 1] };
 	}
 
 	async updateRoomStatus(roomId: string, status: RoomStatus): Promise<Room> {

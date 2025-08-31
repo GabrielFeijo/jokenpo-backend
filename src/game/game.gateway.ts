@@ -96,6 +96,13 @@ export class GameGateway
 				return;
 			}
 
+			if (!room.playerIds.includes(userId)) {
+				const roomData = await this.roomsService.joinRoom({
+					roomId: room.inviteCode,
+					userId,
+				});
+			}
+
 			await this.usersService.updateSocketId(userId, client.id);
 
 			const socketUser: SocketUser = {
