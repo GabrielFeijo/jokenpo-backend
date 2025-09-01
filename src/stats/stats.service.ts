@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StatsQueryDto } from './dto/stats-query.dto';
-import { Choice, GameMode } from '@prisma/client';
+import { Choice } from '@prisma/client';
 
 @Injectable()
 export class StatsService {
@@ -204,7 +204,6 @@ export class StatsService {
 						},
 					},
 					results: true,
-					room: true,
 					winner: true,
 					loser: true,
 				},
