@@ -85,6 +85,16 @@ export class GameGateway
 		try {
 			const { roomId, userId } = data;
 
+			const sockRoom = this.gameState.rooms.get(roomId);
+
+			if (sockRoom && sockRoom?.players.find((p) => p.id === userId)) {
+				client.emit('game-error', {
+					code: 'ALREADY_IN_ROOM',
+					message: 'Você já está nesta sala!',
+				});
+				return;
+			}
+
 			const room = await this.roomsService.findById(roomId);
 			const user = await this.usersService.findById(userId);
 
@@ -97,7 +107,7 @@ export class GameGateway
 			}
 
 			if (!room.playerIds.includes(userId)) {
-				const roomData = await this.roomsService.joinRoom({
+				await this.roomsService.joinRoom({
 					roomId: room.inviteCode,
 					userId,
 				});
