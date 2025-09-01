@@ -51,31 +51,6 @@ export class StatsService {
 
 		const favoriteChoice = choiceStats[0]?.choice || Choice.ROCK;
 
-		const matchHistory = await this.prisma.match.findMany({
-			where: {
-				OR: [
-					{ winnerId: userId },
-					{ loserId: userId },
-					{ isDraw: true, plays: { some: { playerId: userId } } },
-				],
-			},
-			include: {
-				plays: {
-					include: {
-						player: true,
-					},
-				},
-				results: true,
-				room: true,
-				winner: true,
-				loser: true,
-			},
-			orderBy: {
-				createdAt: 'desc',
-			},
-			take: 10,
-		});
-
 		return {
 			userStats: {
 				totalMatches,
@@ -84,7 +59,6 @@ export class StatsService {
 				draws,
 				winRate,
 				favoriteChoice,
-				matchHistory,
 			},
 		};
 	}
@@ -115,50 +89,10 @@ export class StatsService {
 
 		const mostPopularChoice = globalChoiceStats[0]?.choice || Choice.ROCK;
 
-		const recentMatches = await this.prisma.match.findMany({
-			include: {
-				plays: {
-					include: {
-						player: true,
-					},
-				},
-				results: true,
-				room: true,
-				winner: true,
-				loser: true,
-			},
-			orderBy: {
-				createdAt: 'desc',
-			},
-			take: 10,
-		});
-
-		const choiceDistribution = await this.prisma.play.groupBy({
-			by: ['choice'],
-			_count: {
-				choice: true,
-			},
-			orderBy: {
-				_count: {
-					choice: 'desc',
-				},
-			},
-		});
-
-		const gameModeStats = await this.prisma.match.groupBy({
-			by: ['gameMode'],
-			_count: {
-				gameMode: true,
-			},
-		});
-
 		return {
 			totalMatches,
 			totalPlayers,
 			mostPopularChoice,
-			recentMatches,
-			choiceDistribution,
-			gameModeStats,
 		};
 	}
 
