@@ -29,7 +29,7 @@ API para o jogo **Pedra, Papel e Tesoura** construída com NestJS, TypeScript e 
 
    ```bash
    git clone hthttps://github.com/GabrielFeijo/jokenpo-backend.git
-   cd rock-paper-scissors-api
+   cd jokenpo-backend
    ```
 
 2. **Instale as dependências**
